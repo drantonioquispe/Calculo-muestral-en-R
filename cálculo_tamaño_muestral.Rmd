@@ -1,0 +1,178 @@
+---
+title: 'Cálculo de tamaño de muestra'
+author: "Antonio M. Quispe MD PhD"
+date: "17/11/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+# Cálculo de tamaño de muestra
+
+
+**Instalando paquetes**
+```{r}
+
+# install.packages("tidyverse")
+# install.packages("pwr")
+# install.packages("usethis")
+# install.packages("devtools")
+
+```
+
+**Cargar paquetes**
+```{r warning=FALSE}
+
+library(tidyverse) #manipular data
+library(pwr) #cálculos básicos de potencia usando tamaños de efectos y notaciones de Cohen
+library(usethis) #automatizar tareas de configuración de paquetes y proyectos
+library(devtools) #facilitar el desarrollo de paquetes 
+```
+
+## Escenario 1: Muestra para estimar incrementos de una media en una misma población 
+
+### Supuestos: 2 colas, Ho: m=m0 vs Ha: m!=m0, m=20, diff=10 (o ma=30), sd=10, p=0.05, power=0.80
+
+   - **Cálculo del efecto de diseño (d): d = |u1 - u2|/sd**
+```{r}
+
+d = (30 - 20)/10
+d
+```
+   - **n?**
+
+```{r}
+pwr.t.test(d=d, sig.level=0.05, power=.80, type='one.sample')
+```
+   - **Poder?**
+```{r}
+pwr.t.test(n=25, d=d, sig.level=0.05, type='one.sample')
+```
+   - **Efecto de diseño?**
+```{r}
+pwr.t.test(n=25, sig.level=0.05, power=.80, type='one.sample')
+```
+
+## Escenario 2: Muestra para estimar incrementos de una proporción en una misma población 
+
+### Supuestos: 2 colas, Ho: p=p0 vs Ha: p!=p0, p=10, diff=10 (o p0=20), p=0.05, power=0.80
+
+  - Cálculo del efecto de diseño (h): h = 2arcsin(root(p1)) - 2arcsin(root(p2)); 0.2 ~ pequeño, 0.5 ~ medio y 0.8 ~ grande 
+```{r}
+h<-ES.h(0.2,0.1)
+h
+```
+  - **n?**
+```{r}
+pwr.p.test(h=h , power=.80, sig.level=0.05)  
+``` 
+  - **Poder?**
+```{r}
+pwr.p.test(h=h , n=40, sig.level=0.05)  
+
+```
+  - **Efecto de diseño?**
+```{r}
+pwr.p.test(h=h , n=40, sig.level=0.05)  
+
+```
+
+
+## Escenario 3: Muestra para estimar diferencia de medias de dos poblaciones independientes con varianzas desiguales 
+### Supuestos: 2 colas, Ho: m2=m1 vs Ha: m2!= m1, sd1=5.5, sd2=5, p=0.05, power=0.80
+
+   - **Cálculo del efecto de diseño esperado** 
+```{r}
+efecto_u2_u1<-cohen.ES(test="t",size="medium")
+efecto_u2_u1
+```
+   - **n?**
+```{r}
+pwr.t.test(d=.5, sig.level=0.05, power=.80, type="two.sample",alternative="two.sided")
+```
+   - **Poder?**
+```{r}
+pwr.t.test(d=.5, n=70, sig.level=0.05, type="two.sample",alternative="two.sided")
+```
+   - **Efecto de diseño?** 
+```{r}
+pwr.t.test(n=70, sig.level=0.05, power=.80, type="two.sample",alternative="two.sided")
+```
+
+## Escenario 4: Muestra para estimar diferencia de proporciones en dos poblaciones independientes 
+
+### Supuestos: 2 colas, Ho: p2=p1 vs Ha: p2!=p1, p1=10, diff=40 (o p2=50), p=0.05, power=0.80
+
+   - **Calculo del efecto de diseño esperado** 
+```{r}
+efecto_p2_p1<-ES.h(0.5,0.1)
+efecto_p2_p1
+```
+  - **n?**
+```{r}
+pwr.2p.test(h=efecto_p2_p1, sig.leve =0.05, power=.80,alternative="two.sided")
+```
+  - **Poder?**
+```{r}
+pwr.2p.test(h=efecto_p2_p1, n=20 ,sig.level=0.05, alternative="two.sided")
+```
+  - **Efecto de diseño?**
+```{r}
+pwr.2p.test(n=20, sig.leve =0.05, power=.80,alternative="two.sided")
+```
+## Escenario 5: Muestra para estimar diferencia de medias de dos muestras dependientes con varianzas iguales 
+
+
+### Supuestos: 2 colas, Ho: d=d0 vs Ha: d!= d0, d0=5, sd1=sd2=sd, sd=5, p=0.05, power=0.80
+
+  - **Cálculo del efecto de diseño esperado** 
+```{r}
+
+efecto_u2p_u1p<-(0-5)/5
+efecto_u2p_u1p
+```
+  - **n?**
+```{r}
+pwr.t.test(d=1, power=0.8, sig.level=0.05, type="paired", alternative="two.sided")
+
+```
+  - **Poder?**
+```{r}
+
+pwr.t.test(d=1, n=40, sig.level=0.05, type="paired", alternative="two.sided")
+```
+
+  - **Efecto de diseño?** 
+
+```{r}
+pwr.t.test(n=40, power=0.8, sig.level=0.05, type="paired", alternative="two.sided")
+
+```
+
+## Escenario 6: Muestra para análisis de tipo anova unidireccional (comparación de más de dos medias) 
+
+
+### Supuestos: 2 colas, Ho: delta =0 vs Ha: delta !=0, m1=50, m2=60 m3=70, var error=900, p=0.05, power=0.80
+
+  - **Cálculo del efecto de diseño esperado** 
+```{r}
+ 
+efecto_anova<-cohen.ES(test="anov",size="medium")
+efecto_anova
+
+```
+  - **n?**
+```{r}
+
+pwr.anova.test(f=0.25, k=3, sig.level=0.05, power=.80)  
+```
+  - **Poder?**
+```{r}
+
+pwr.anova.test(f=0.25, k=3, n=60, sig.level=0.05)  
+```
+
+  - **Efecto de diseño?**
+```{r}
+pwr.anova.test(k=3, n=60, sig.level=0.05, power=.80)
+```
+
